@@ -34,19 +34,10 @@ help:
 # ----------------------------------------------------------
 # Setup
 # ----------------------------------------------------------
-setup:
-	@echo "📦 Installing dependencies..."
-	pip install -r requirements.txt
-	@echo "✅ Setup complete!"
-
-setup-minimal:
-	@echo "📦 Installing minimal dependencies..."
-	pip install -r requirements-minimal.txt
-	@echo "✅ Setup complete!"
 
 setup-dev:
 	@echo "📦 Installing dev dependencies..."
-	pip install -r requirements-dev.txt
+	pip install -r requirements-dev.txt --ignore-installed --break-system-packages
 	@echo "✅ Setup complete!"
 
 # ----------------------------------------------------------
