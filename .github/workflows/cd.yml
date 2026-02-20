@@ -1,0 +1,82 @@
+name: Data Pipeline CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'models/**'
+      - 'schema.yml'
+
+jobs:
+  deploy-staging:
+    name: "Deploy to Staging"
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dbt
+        run: pip install dbt-core dbt-trino trino
+
+      - name: Deploy to staging
+        env:
+          TRINO_HOST: ${{ secrets.STAGING_TRINO_HOST }}
+          TRINO_PORT: ${{ secrets.STAGING_TRINO_PORT }}
+          TRINO_USER: ${{ secrets.STAGING_TRINO_USER }}
+        run: |
+          dbt run --profiles-dir ./ci --target staging --full-refresh
+          dbt test --profiles-dir ./ci --target staging
+
+      - name: Quality gate
+        env:
+          TRINO_HOST: ${{ secrets.STAGING_TRINO_HOST }}
+        run: |
+          python tests/quality_gate.py \
+            --environment staging \
+            --trino-host $TRINO_HOST
+
+  deploy-production:
+    name: "Deploy to Production"
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dbt
+        run: pip install dbt-core dbt-trino trino
+
+      - name: Deploy to production
+        env:
+          TRINO_HOST: ${{ secrets.PROD_TRINO_HOST }}
+          TRINO_PORT: ${{ secrets.PROD_TRINO_PORT }}
+          TRINO_USER: ${{ secrets.PROD_TRINO_USER }}
+        run: |
+          dbt run --profiles-dir ./ci --target production
+          dbt test --profiles-dir ./ci --target production
+
+      - name: Quality gate
+        env:
+          TRINO_HOST: ${{ secrets.PROD_TRINO_HOST }}
+        run: |
+          python tests/quality_gate.py \
+            --environment production \
+            --trino-host $TRINO_HOST
+
+      - name: Post-deploy maintenance
+        env:
+          TRINO_HOST: ${{ secrets.PROD_TRINO_HOST }}
+          TRINO_PORT: ${{ secrets.PROD_TRINO_PORT }}
+        run: |
+          echo "Run Iceberg table maintenance..."
+          echo "OPTIMIZE, expire snapshots, ANALYZE"

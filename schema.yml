@@ -1,0 +1,124 @@
+version: 2
+
+sources:
+  - name: raw
+    description: "Raw data from CDC pipeline (Debezium → Kafka → Lakehouse)"
+    tables:
+      - name: bookings_raw
+        description: "CDC snapshots of booking state changes"
+        columns:
+          - name: booking_id
+            description: "Unique booking identifier"
+            tests:
+              - not_null
+          - name: user_id
+            description: "User who made the booking"
+          - name: hotel_id
+            description: "Hotel being booked"
+          - name: status
+            description: "Booking status at this snapshot"
+            tests:
+              - accepted_values:
+                  values: ['created', 'confirmed', 'cancelled']
+          - name: price
+            description: "Booking price"
+          - name: created_at
+            description: "When the booking was originally created"
+          - name: updated_at
+            description: "When this snapshot was captured"
+
+      - name: booking_events_raw
+        description: "Append-only event log of booking state transitions"
+        columns:
+          - name: booking_id
+            tests:
+              - not_null
+          - name: event_type
+            tests:
+              - accepted_values:
+                  values: ['created', 'confirmed', 'cancelled']
+          - name: event_ts
+            description: "When the event occurred"
+
+      - name: hotels_raw
+        description: "Hotel reference/dimension data"
+        columns:
+          - name: hotel_id
+            tests:
+              - unique
+              - not_null
+
+models:
+  - name: stg_bookings
+    description: "Staged bookings — type cast, exact duplicates removed"
+    columns:
+      - name: booking_id
+        tests:
+          - not_null
+      - name: price
+        tests:
+          - not_null
+
+  - name: stg_booking_events
+    description: "Staged booking events — type cast, exact duplicates removed"
+    columns:
+      - name: booking_id
+        tests:
+          - not_null
+
+  - name: stg_hotels
+    description: "Staged hotels — type cast, deduplicated by hotel_id"
+    columns:
+      - name: hotel_id
+        tests:
+          - unique
+          - not_null
+
+  - name: silver_bookings
+    description: >
+      Latest correct state of each booking, reconciled from CDC snapshots 
+      and event stream. One row per booking_id. Conflicts resolved using 
+      timestamp comparison with terminal state guard for cancellations.
+    columns:
+      - name: booking_id
+        description: "Unique booking identifier"
+        tests:
+          - unique
+          - not_null
+      - name: booking_status
+        description: "Resolved booking status after conflict resolution"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['created', 'confirmed', 'cancelled']
+      - name: user_id
+        tests:
+          - not_null
+      - name: hotel_id
+        tests:
+          - not_null
+      - name: price
+        description: "Booking price from latest CDC snapshot"
+        tests:
+          - not_null
+      - name: _had_conflict
+        description: "TRUE if bookings_raw and booking_events_raw disagreed on status"
+
+  - name: gold_daily_city_kpis
+    description: >
+      Daily aggregated booking KPIs per city. Grain: one row per day × city.
+      Uses created_at date as the reporting date for stable metrics.
+    columns:
+      - name: booking_date
+        tests:
+          - not_null
+      - name: city
+        tests:
+          - not_null
+      - name: total_bookings
+        tests:
+          - not_null
+      - name: cancellation_rate
+        description: "Ratio of cancelled to total bookings (0 to 1)"
+      - name: total_confirmed_revenue
+        description: "Sum of price for confirmed bookings only"

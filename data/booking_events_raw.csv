@@ -1,0 +1,13 @@
+booking_id,event_type,event_ts
+b1,created,2025-01-01T10:05:00
+b1,confirmed,2025-01-01T10:10:00
+b2,created,2025-01-01T11:00:00
+b2,cancelled,2025-01-02T09:05:00
+b3,created,2025-01-02T14:20:00
+b3,confirmed,2025-01-03T08:00:00
+b4,created,2025-01-03T18:00:00
+b5,created,2025-01-03T20:00:00
+b5,confirmed,2025-01-04T07:30:00
+b5,cancelled,2025-01-04T10:00:00
+b3,confirmed,2025-01-02T14:25:00
+

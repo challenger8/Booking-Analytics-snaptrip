@@ -1,0 +1,52 @@
+name: 'booking_analytics'
+version: '1.0.0'
+config-version: 2
+
+profile: 'booking_analytics'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["data"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+seeds:
+  booking_analytics:
+    +schema: raw
+    bookings_raw:
+      +column_types:
+        booking_id: varchar
+        user_id: varchar
+        hotel_id: varchar
+        status: varchar
+        price: decimal(10,2)
+        created_at: timestamp
+        updated_at: timestamp
+    booking_events_raw:
+      +column_types:
+        booking_id: varchar
+        event_type: varchar
+        event_ts: timestamp
+    hotels_raw:
+      +column_types:
+        hotel_id: varchar
+        city: varchar
+        star_rating: integer
+
+models:
+  booking_analytics:
+    staging:
+      +materialized: view
+      +schema: staging
+    silver:
+      +materialized: table
+      +schema: silver
+    gold:
+      +materialized: table
+      +schema: gold

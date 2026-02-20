@@ -1,0 +1,27 @@
+booking_analytics:
+  target: ci
+  outputs:
+    ci:
+      type: duckdb
+      path: ":memory:"
+      threads: 4
+      
+    staging:
+      type: trino
+      method: none
+      host: "{{ env_var('TRINO_HOST', 'localhost') }}"
+      port: "{{ env_var('TRINO_PORT', '8080') | int }}"
+      user: "{{ env_var('TRINO_USER', 'ci-pipeline') }}"
+      catalog: staging_lakehouse
+      schema: silver
+      threads: 8
+      
+    production:
+      type: trino
+      method: none
+      host: "{{ env_var('TRINO_HOST', 'localhost') }}"
+      port: "{{ env_var('TRINO_PORT', '8080') | int }}"
+      user: "{{ env_var('TRINO_USER', 'ci-pipeline') }}"
+      catalog: prod_lakehouse
+      schema: silver
+      threads: 16
