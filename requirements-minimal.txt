@@ -1,9 +1,0 @@
-# ============================================================
-# Minimal Dependencies — Just enough to run locally
-# ============================================================
-# Install: pip install -r requirements-minimal.txt
-# ============================================================
-
-dbt-core==1.9.1
-dbt-duckdb==1.9.1
-duckdb==1.2.1
