@@ -3,7 +3,7 @@ booking_analytics:
   outputs:
     ci:
       type: duckdb
-      path: ":memory:"
+      path: "booking_analytics.duckdb"
       threads: 4
       
     staging:

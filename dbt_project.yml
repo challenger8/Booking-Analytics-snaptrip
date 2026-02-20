@@ -18,7 +18,6 @@ clean-targets:
 
 seeds:
   booking_analytics:
-    +schema: raw
     bookings_raw:
       +column_types:
         booking_id: varchar
@@ -43,10 +42,7 @@ models:
   booking_analytics:
     staging:
       +materialized: view
-      +schema: staging
     silver:
       +materialized: table
-      +schema: silver
     gold:
       +materialized: table
-      +schema: gold

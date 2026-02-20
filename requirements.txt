@@ -1,0 +1,48 @@
+# ============================================================
+# Booking Analytics Pipeline — Python Dependencies
+# ============================================================
+# Install: pip install -r requirements.txt
+# ============================================================
+
+# ----------------------------------------------------------
+# dbt Core & Adapters
+# ----------------------------------------------------------
+dbt-core==1.9.1
+dbt-duckdb==1.9.1              # Local development & CI testing
+dbt-trino==1.9.0               # Production (Trino on Iceberg)
+
+# ----------------------------------------------------------
+# Database Drivers
+# ----------------------------------------------------------
+duckdb==1.2.1                  # Local SQL engine for testing
+trino[sqlalchemy]==0.330.0     # Trino Python client + SQLAlchemy
+
+# ----------------------------------------------------------
+# SQL Linting & Quality
+# ----------------------------------------------------------
+sqlfluff==3.3.0                # SQL linter & formatter
+sqlfluff-templater-dbt==3.3.0  # dbt templating support for SQLFluff
+
+# ----------------------------------------------------------
+# YAML & Config Validation
+# ----------------------------------------------------------
+yamllint==1.35.1               # YAML linter
+
+# ----------------------------------------------------------
+# Testing & Quality
+# ----------------------------------------------------------
+pytest==8.3.4                  # Python test runner
+pytest-cov==6.0.0              # Test coverage
+
+# ----------------------------------------------------------
+# Data Processing (optional, useful for data exploration)
+# ----------------------------------------------------------
+pandas==2.2.3                  # DataFrame operations
+pyarrow==18.1.0                # Parquet file support
+
+# ----------------------------------------------------------
+# Utilities
+# ----------------------------------------------------------
+python-dotenv==1.0.1           # Load .env files
+click==8.1.8                   # CLI framework
+rich==13.9.4                   # Pretty terminal output

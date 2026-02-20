@@ -88,29 +88,28 @@ daily_city_agg AS (
         CASE 
             WHEN COUNT(*) > 0 
             THEN ROUND(
-                CAST(COUNT(CASE WHEN booking_status = 'cancelled' THEN 1 END) AS DECIMAL(10,4))
-                / CAST(COUNT(*) AS DECIMAL(10,4)),
+                CAST(COUNT(CASE WHEN booking_status = 'cancelled' THEN 1 END) AS DOUBLE)
+                / CAST(COUNT(*) AS DOUBLE),
                 4
             )
-            ELSE CAST(0 AS DECIMAL(6,4))
-        END                                                         AS cancellation_rate,
+            ELSE 0
+        END                                         AS cancellation_rate,
         
         -- Revenue: confirmed only
         COALESCE(
             SUM(CASE WHEN booking_status = 'confirmed' THEN price END), 
-            CAST(0 AS DECIMAL(14,2))
-        )                                                           AS total_confirmed_revenue,
-        
+            0
+        )                                           AS total_confirmed_revenue,
         -- Average prices
         ROUND(AVG(price), 2)                                        AS avg_booking_price,
         
         ROUND(
             COALESCE(
                 AVG(CASE WHEN booking_status = 'confirmed' THEN price END),
-                CAST(0 AS DECIMAL(10,2))
+                0
             ), 
             2
-        )                                                           AS avg_confirmed_price,
+        )                                           AS avg_confirmed_price,
         
         CURRENT_TIMESTAMP                                           AS _computed_at
         

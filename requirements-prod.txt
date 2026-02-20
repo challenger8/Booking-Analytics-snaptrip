@@ -1,0 +1,8 @@
+
+# Install: pip install -r requirements-prod.txt
+
+dbt-core==1.9.1
+dbt-trino==1.9.0
+trino[sqlalchemy]==0.331.0
+pyarrow==18.1.0
+python-dotenv==1.0.1
