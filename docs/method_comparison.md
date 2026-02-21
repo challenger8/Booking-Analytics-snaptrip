@@ -4,8 +4,10 @@
 
 | Layer | Generic (runs on DuckDB) | Distributed (runs on Trino/Spark) |
 |-------|--------------------------|-----------------------------------|
-| Silver | `models/silver/silver_bookings.sql` | `models/silver/distributed/silver_bookings_distributed.sql` |
-| Gold | `models/gold/gold_daily_city_kpis.sql` | `models/gold/distributed/gold_daily_city_kpis_distributed.sql` |
+| Silver | `models/silver/silver_bookings.sql` | `sql/distributed/silver_bookings_distributed.sql` |
+| Gold | `models/gold/gold_daily_city_kpis.sql` | `sql/distributed/gold_daily_city_kpis_distributed.sql` |
+
+Both produce **identical results** — verified by `compare_methods.py`.
 
 ## Side-by-Side Differences
 
@@ -25,8 +27,8 @@ CREATE TABLE ... WITH (
 );
 -- Atomic INSERT OVERWRITE (readers see old data until write completes)
 INSERT OVERWRITE lakehouse.silver.silver_bookings ...
-
-###2. Join Strategy
+```
+### 2. Join Strategy
 SQL
 
 -- GENERIC:
@@ -39,7 +41,8 @@ LEFT JOIN stg_hotels h ON s.hotel_id = h.hotel_id
 -- Hotels (<1MB) broadcast to all executors.
 -- Silver table (millions of rows) stays in place. No shuffle.
 
-### 3.  NULL Handling
+### 3. NULL Handling
+SQL
 
 -- GENERIC (may break on some engines):
 GREATEST(
@@ -56,7 +59,10 @@ CASE
 END
 -- Works identically on Trino, Spark, DuckDB, Postgres
 
+
 ### 4. Incremental Updates
+SQL
+
 -- GENERIC:
 -- Full refresh only. Reprocess everything every run.
 
@@ -68,7 +74,8 @@ WHEN MATCHED AND source.last_updated_at > target.last_updated_at THEN UPDATE ...
 WHEN NOT MATCHED THEN INSERT ...
 -- Only processes changed bookings. 95%+ cost reduction on daily runs.
 
-### 5. Incremental Updates
+### 5. File Management
+SQL
 
 -- GENERIC:
 -- Not applicable. Engine manages storage.
@@ -83,3 +90,5 @@ ALTER TABLE silver_bookings EXECUTE
 
 -- Update statistics for query optimizer
 ANALYZE silver_bookings;
+
+
