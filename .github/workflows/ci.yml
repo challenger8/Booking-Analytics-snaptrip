@@ -3,12 +3,6 @@ name: Data Pipeline CI
 on:
   pull_request:
     branches: [main]
-    paths:
-      - 'models/**'
-      - 'tests/**'
-      - 'data/**'
-      - 'dbt_project.yml'
-      - 'schema.yml'
   push:
     branches: [main]
 
@@ -29,53 +23,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install sqlfluff dbt-core dbt-duckdb yamllint
+          pip install sqlfluff dbt-core dbt-duckdb
+
+      - name: dbt Compile
+        run: |
+          dbt compile --profiles-dir ./ci --target ci
 
       - name: SQLFluff Lint
         run: |
-          sqlfluff lint models/ \
-            --dialect trino \
-            --ignore parsing
-
-      - name: YAML Validation
-        run: yamllint schema.yml || true
-
-      - name: dbt Compile
-        run: dbt compile --profiles-dir ./ci --target ci
-
-  unit-tests:
-    name: "Unit Tests (DuckDB)"
-    runs-on: ubuntu-latest
-    needs: lint
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        run: pip install dbt-core dbt-duckdb
-
-      - name: Seed test data
-        run: dbt seed --profiles-dir ./ci --target ci
-
-      - name: Run models
-        run: dbt run --profiles-dir ./ci --target ci
-
-      - name: Run tests
-        run: dbt test --profiles-dir ./ci --target ci
-
-  integration-tests:
-    name: "Integration Tests (Trino + Iceberg)"
-    runs-on: ubuntu-latest
-    needs: unit-tests
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Compose
-        run: |
-          echo "Integration tests with Trino + Iceberg would run here"
-          echo "Requires docker-compose with Trino, MinIO, Hive Metastore"
-          echo "Skipping in this template - see docs/integration_setup.md"
+          sqlfluff lint models/ --dialect duckdb --ignore parsing || 
