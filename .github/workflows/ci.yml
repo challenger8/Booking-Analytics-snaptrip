@@ -6,12 +6,9 @@ on:
   push:
     branches: [main]
 
-env:
-  PYTHON_VERSION: '3.11'
-
 jobs:
-  lint:
-    name: "SQL Lint & Validation"
+  lint-and-test:
+    name: "Lint & Test"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,16 +16,20 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: '3.11'
 
       - name: Install dependencies
-        run: |
-          pip install sqlfluff dbt-core dbt-duckdb
+        run: pip install dbt-core dbt-duckdb sqlfluff
 
-      - name: dbt Compile
-        run: |
-          dbt compile --profiles-dir ./ci --target ci
+      - name: dbt seed
+        run: dbt seed --profiles-dir ./ci --target ci
 
-      - name: SQLFluff Lint
-        run: |
-          sqlfluff lint models/ --dialect duckdb --ignore parsing || 
+      - name: dbt run
+        run: dbt run --profiles-dir ./ci --target ci
+
+      - name: dbt test
+        run: dbt test --profiles-dir ./ci --target ci
+
+      - name: SQLFluff lint
+        continue-on-error: true
+        run: sqlfluff lint models/ --dialect duckdb --ignore parsing
